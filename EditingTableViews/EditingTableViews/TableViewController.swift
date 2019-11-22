@@ -36,14 +36,24 @@ class TableViewController: UIViewController {
         }
         
         groceryItems.insert(newGroceryVC.newItem, at: 0)
-        let indexPath = IndexPath(row: 0, section: 0)
-        tableView.insertRows(at: [indexPath], with: .automatic)
+//        let indexPath = IndexPath(row: 0, section: 0)
+//        tableView.insertRows(at: [indexPath], with: .automatic)
         
     }
         
         private func setUp(){
             groceryMatrix = GroceryItem.makeMeAMatrix(outOf: groceryItems)
         }
+    
+    private func findProperSection(_ item: GroceryItem) -> Int{
+        var section: Int = -1
+        for (index, element) in groceryMatrix.enumerated(){
+            if element[0].status == item.status{
+                section = index
+            }
+        }
+        return section
+    }
 }
 
 extension TableViewController: UITableViewDataSource{
@@ -78,5 +88,13 @@ extension TableViewController: UITableViewDataSource{
 }
 
 extension TableViewController: UITableViewDelegate{
-    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        groceryItems[indexPath.row].toggleStatus()
+        groceryMatrix = GroceryItem.makeMeAMatrix(outOf: groceryItems)
+        tableView.beginUpdates()
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+        let secondIndexPath = IndexPath(row: 0, section: findProperSection(groceryMatrix[indexPath.section][indexPath.row]) )
+        tableView.insertRows(at: [secondIndexPath], with: .automatic)
+        tableView.endUpdates()
+    }
 }

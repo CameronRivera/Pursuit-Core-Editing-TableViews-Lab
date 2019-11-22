@@ -27,19 +27,20 @@ class GroceryItem{
     }
     
     static func makeMeAMatrix(outOf arr: [GroceryItem]) -> [[GroceryItem]]{
-        let sortedArr = arr.sorted { $0.status.rawValue < $1.status.rawValue}
-        let numberOfSections = Set<String>(sortedArr.map{ $0.status.rawValue })
+        let sortedArr = arr.sorted { $0.status.rawValue < $1.status.rawValue }
+        let numberOfSections = Set<Status>(sortedArr.map{ $0.status })
+        print(numberOfSections.count)
         var theMatrix = Array(repeating: [GroceryItem](), count: numberOfSections.count)
         
         var currentIndex = 0
-        var currentSection = sortedArr.first?.status.rawValue
+        var currentSection = sortedArr.first?.status
         
         for element in sortedArr {
-            if element.status.rawValue == currentSection{
+            if element.status == currentSection{
                 theMatrix[currentIndex].append(element)
             } else {
                 currentIndex += 1
-                currentSection = element.status.rawValue
+                currentSection = element.status
                 theMatrix[currentIndex].append(element)
             }
         }
