@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum Status: String{
+enum Status: String, CaseIterable{
     case purchased
     case unpurchased
 }
@@ -29,7 +29,7 @@ class GroceryItem{
     static func makeMeAMatrix(outOf arr: [GroceryItem]) -> [[GroceryItem]]{
         let sortedArr = arr.sorted { $0.status.rawValue < $1.status.rawValue }
         let numberOfSections = Set<Status>(sortedArr.map{ $0.status })
-        print(numberOfSections.count)
+        print("The number of sections in the matrix is \(numberOfSections.count)")
         var theMatrix = Array(repeating: [GroceryItem](), count: numberOfSections.count)
         
         var currentIndex = 0

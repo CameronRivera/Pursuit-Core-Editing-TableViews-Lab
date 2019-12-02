@@ -10,24 +10,16 @@ import UIKit
 
 class TableViewController: UIViewController {
 
-    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var groceryTableView: UITableView!
     
-    var groceryItems: [GroceryItem] = [] {
-        didSet{
-            groceryMatrix = GroceryItem.makeMeAMatrix(outOf: groceryItems)
-        }
-    }
-    var groceryMatrix: [[GroceryItem]] = [] {
-        didSet{
-            tableView.reloadData()
-        }
-    }
+    var groceryItems: [GroceryItem] = []
+    var groceryMatrix: [[GroceryItem]] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setUp()
-        tableView.dataSource = self
-        tableView.delegate = self
+        //setUp()
+        groceryTableView.dataSource = self
+        groceryTableView.delegate = self
     }
 
     @IBAction func addNewGroceryItem(unWindSegue: UIStoryboardSegue){
@@ -35,24 +27,55 @@ class TableViewController: UIViewController {
             fatalError("Could not access source viewController as a NewGroceryItemViewController.")
         }
         
-        groceryItems.insert(newGroceryVC.newItem, at: 0)
+        
+        insertIntoMatrix(aNew: newGroceryVC.newItem)
+        groceryTableView.reloadData()
 //        let indexPath = IndexPath(row: 0, section: 0)
-//        tableView.insertRows(at: [indexPath], with: .automatic)
+//        groceryTableView.insertRows(at: [indexPath], with: .automatic)
+        
         
     }
         
-        private func setUp(){
-            groceryMatrix = GroceryItem.makeMeAMatrix(outOf: groceryItems)
-        }
+    private func setUp(){
+        groceryMatrix = GroceryItem.makeMeAMatrix(outOf: groceryItems)
+    }
     
     private func findProperSection(_ item: GroceryItem) -> Int{
         var section: Int = -1
+        
         for (index, element) in groceryMatrix.enumerated(){
-            if element[0].status == item.status{
+            if element.count == 0 {
+                continue
+            }
+            else if element.first?.status == item.status{
                 section = index
             }
         }
+        
         return section
+    }
+    
+    private func insertIntoMatrix(aNew: GroceryItem){
+        var numOfIndices = 0
+        var emptyIndex = -1
+        var inserted: Bool = false
+        
+        for (index,element) in groceryMatrix.enumerated(){
+            if element.isEmpty{
+                emptyIndex = index
+            } else if element.first?.status == aNew.status{
+                groceryMatrix[index].insert(aNew, at: 0)
+                inserted = true
+            }
+        }
+        
+        if emptyIndex == -1 && !inserted {
+            numOfIndices = groceryMatrix.count
+            groceryMatrix.append([GroceryItem]())
+            groceryMatrix[numOfIndices].insert(aNew, at: 0)
+        } else if emptyIndex != -1 && !inserted{
+            groceryMatrix[emptyIndex].insert(aNew, at: 0)
+        }
     }
 }
 
@@ -72,14 +95,14 @@ extension TableViewController: UITableViewDataSource{
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let xCell = tableView.dequeueReusableCell(withIdentifier: "groceryCell", for: indexPath)
         xCell.textLabel?.text = groceryMatrix[indexPath.section][indexPath.row].name
-        xCell.detailTextLabel?.text = "$\(String(format: "%2.f", groceryMatrix[indexPath.section][indexPath.row].price))"
+        xCell.detailTextLabel?.text = "$\(String(format: "%.2f", groceryMatrix[indexPath.section][indexPath.row].price))"
         return xCell
     }
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         switch editingStyle{
         case .delete:
-            groceryItems.remove(at:indexPath.row)
+            groceryMatrix[indexPath.section].remove(at:indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .automatic)
         default:
             break
@@ -89,12 +112,23 @@ extension TableViewController: UITableViewDataSource{
 
 extension TableViewController: UITableViewDelegate{
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        groceryItems[indexPath.row].toggleStatus()
-        groceryMatrix = GroceryItem.makeMeAMatrix(outOf: groceryItems)
-        tableView.beginUpdates()
-        tableView.deleteRows(at: [indexPath], with: .automatic)
-        let secondIndexPath = IndexPath(row: 0, section: findProperSection(groceryMatrix[indexPath.section][indexPath.row]) )
-        tableView.insertRows(at: [secondIndexPath], with: .automatic)
-        tableView.endUpdates()
+        // Change the value in the underlying array.
+        // Add it to the proper position in the array.
+        // Add it to the proper position in the matrix.
+        // Remove it from the former section in the table.
+        // Add it to the first position in the new section.
+        let tempItem = groceryMatrix[indexPath.section].remove(at: indexPath.row)
+        tempItem.toggleStatus()
+        print("The value of indexPath.row is equal to \(indexPath.row)")
+        print("The list item \(tempItem.name) has a status of \(tempItem.status)")
+        insertIntoMatrix(aNew: tempItem)
+        print (findProperSection(tempItem))
+        print("The count of the matrix is \(groceryMatrix.count)")
+        groceryTableView.reloadData()
+//        let secondIndexPath = IndexPath(row: 0, section: findProperSection(tempItem))
+//        tableView.beginUpdates()
+//        tableView.deleteRows(at: [indexPath], with: .automatic)
+//        tableView.insertRows(at: [secondIndexPath], with: .automatic)
+//        tableView.endUpdates()
     }
 }
